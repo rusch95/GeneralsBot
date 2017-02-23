@@ -1,5 +1,4 @@
-from socketIO_client import SocketIO, LoggingNamespace
-import json
+from base_bot import BaseBot
 import random
 import math
 
@@ -8,43 +7,17 @@ TILE_MOUNTAIN = -2
 TILE_FOG = -3
 TILE_FOG_OBSTACLE = -4
 
-def on_connect():
-    print('connect')
+class ExampleBot(BaseBot):
 
-def on_disconnect():
-    print('disconnect')
+    def __init__(self, host, user_id):
+        super(ExampleBot, self).__init__(host, user_id)
 
-def on_reconnect():
-    print('reconnect')
-
-def patch(old, diff):
-    out = []
-    i = 0
-    while i < len(diff):
-        if diff[i]:
-            out.extend(old[len(out):len(out) + diff[i]])
-        i += 1
-        if i < len(diff) and diff[i]:
-            out.extend(diff[i + 1: i + 1 + diff[i]])
-            i += diff[i]
-        i += 1
-    return out
-
-
-class ExampleBot(object):
-
-    def __init__(self, socket):
-        self.socket = socket
         self.playerIndex = None
         self.generals = None
         self.cities = []
         self.map = []
 
-#	def leave(self):
-#        pass
-#	    #self.socket.emit('leave_game')
-
-    def on_game_start(self, data, other):
+    def recieve_game_start(self, data, other):
         print data
         self.player_index = data['playerIndex']
         self.replay_id = data['replay_id']
@@ -52,18 +25,13 @@ class ExampleBot(object):
         self.usernames = data['usernames']
         self.teams = data['teams']
 
-    def leave_game(self, data, other):
-        print data
-        print other
-        self.socket.emit('leave_game')
-
-    def chat_message(self, data, other):
+    def recieve_chat_message(self, data, other):
         print data
         print other
 
-    def game_update(self, data, other):
-        self.cities = patch(self.cities, data['cities_diff'])
-        self.map = patch(self.map, data['map_diff'])
+    def recieve_game_update(self, data, other):
+        self.cities = self.patch(self.cities, data['cities_diff'])
+        self.map = self.patch(self.map, data['map_diff'])
         self.generals = data['generals']
 
         width = self.map[0]
@@ -103,32 +71,19 @@ class ExampleBot(object):
 
 def main():
 
-    user_id = 'super_sexy_bot_id'
+    host = 'http://botws.generals.io'
     username = '[Bot] Example Bot'
+    user_id = 'an_incredibly_deadbeef_bot'
 
-    socket = SocketIO('http://botws.generals.io')
-    bot = ExampleBot(socket)
-    print('Connecting to server')
-    socket.on('connect', on_connect)
-    socket.on('disconnect', on_disconnect)
+    bot = ExampleBot(host, user_id)
+    bot.send_set_username(username)
 
-    #Set the username for the bot
-    #This should only ever be done once.
-    socket.emit('set_username', user_id, username)
+    custom_game_id = 'super_private_game'
+    bot.send_join_private(custom_game_id)
+    bot.send_set_force_start(custom_game_id, True)
+    bot.wait()
 
-    custom_game_id = 'my_private_game'
-    socket.emit('join_private', custom_game_id, user_id)
-    socket.emit('set_force_start', custom_game_id, True)
-    print 'Joined custome game at http://bot.generals.io/games/' + custom_game_id
-
-    socket.on('game_start', bot.on_game_start)
-    socket.on('game_lost', bot.leave_game)
-    socket.on('game_won', bot.leave_game)
-    socket.on('chat_message', bot.chat_message)
-    socket.on('game_update', bot.game_update)
-
-    socket.wait()
-
-main()
+if __name__ == '__main__':
+    main()
 
 
