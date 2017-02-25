@@ -1,11 +1,8 @@
-from base_bot import BaseBot
+from common.base_bot  import BaseBot
+from common.constants import *
 import random
 import math
 
-TILE_EMPTY = -1
-TILE_MOUNTAIN = -2
-TILE_FOG = -3
-TILE_FOG_OBSTACLE = -4
 
 class ExampleBot(BaseBot):
 
@@ -17,19 +14,17 @@ class ExampleBot(BaseBot):
         self.cities = []
         self.map = []
 
-    def recieve_game_start(self, data, other):
-        print data
+    def recieve_game_start(self, data, null):
         self.player_index = data['playerIndex']
         self.replay_id = data['replay_id']
         self.chat_room = data['chat_room']
         self.usernames = data['usernames']
         self.teams = data['teams']
 
-    def recieve_chat_message(self, data, other):
+    def recieve_chat_message(self, chat_room, data):
         print data
-        print other
 
-    def recieve_game_update(self, data, other):
+    def recieve_game_update(self, data, null):
         self.cities = self.patch(self.cities, data['cities_diff'])
         self.map = self.patch(self.map, data['map_diff'])
         self.generals = data['generals']
@@ -41,9 +36,6 @@ class ExampleBot(BaseBot):
         armies = self.map[2: size + 2]
 
         terrain = self.map[size + 2: size + 2 + size]
-
-        print len(self.map)
-        print data['map_diff']
 
         while True:
             #Pick a random tile
@@ -66,7 +58,7 @@ class ExampleBot(BaseBot):
                 else:
                     continue
 
-                self.socket.emit('attack', index, end_index)
+                self.send_attack(index, end_index)
                 break
 
 def main():

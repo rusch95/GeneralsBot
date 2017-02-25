@@ -2,26 +2,14 @@ from socketIO_client import SocketIO, LoggingNamespace
 import urllib
 import logging
 
-TILE_EMPTY = -1
-TILE_MOUNTAIN = -2
-TILE_FOG = -3
-TILE_FOG_OBSTACLE = -4
-
 logging.basicConfig(level=logging.INFO)
 
 class BaseBot(object):
 
     def __init__(self, host, user_id):
+        ##TODO Setup logging for error detection on socket errors
         self.socket = SocketIO('http://botws.generals.io')
         self.bind_recieve_callbacks()
-
-        self.user_id = user_id
-
-        self.playerIndex = None
-        self.generals = None
-        self.cities = []
-        self.map = []
-
 
         self.user_id = user_id
 
@@ -130,6 +118,6 @@ class BaseBot(object):
             i += 1
         return out
 
-    def wait(self):
-        self.socket.wait()
+    def wait(self, seconds=None):
+        self.socket.wait(seconds=seconds)
 
